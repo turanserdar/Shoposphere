@@ -1,0 +1,51 @@
+﻿@model IndexViewModel
+
+@{
+    ViewData["Title"] = "List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info">
+        @TempData["Message"]
+    </div>
+}
+<partial name="_HeadPartialView" model="Model.Categories" />
+<div class="main-banner" id="top">
+    <div class="container-fluid">
+        <div class="container">
+            <div class="row">
+
+                <div class="col-lg-12">
+                    <div class="right-content">
+                        <div class="row">
+                            @foreach (var item in Model.Products)
+                            {
+                                <div class="col-lg-4">
+                                    <div class="right-first-image">
+                                        <div class="thumb">
+                                            <div class="inner-content">
+                                                <h4>@item.ProductName</h4>
+                                            </div>
+                                            <div class="hover-content">
+                                                <div class="inner">
+                                                    <h4>@item.ProductName</h4>
+                                                    <p>@item.UnitPrice</p>
+                                                    <div class="main-border-button">
+                                                        <a href="/product/productdetail/@item.Id">Product Detail</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <img width="385" height="309" src="data:image;base64,@item.PictureStr" alt="">
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
