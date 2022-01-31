@@ -16,24 +16,51 @@ namespace Shoposphere.UI.Controllers
     public class CategoryController : BaseController
     {
         private readonly IRepository<Category> _categoryRepository;
+        private readonly IRepository<Product> _productRepository;
+        private readonly IRepository<Supplier> _supplierRepository;
+
+
         //private readonly IRepository<Product> _productRepository;
-        public CategoryController(IRepository<Category> categoryRepository)
+        public CategoryController(IRepository<Category> categoryRepository, IRepository<Product> productRepository, IRepository<Supplier> supplierRepository)
         {
             _categoryRepository = categoryRepository;
+            _productRepository = productRepository;
+            _supplierRepository = supplierRepository;
         }
 
-        public ActionResult List()
+        public ActionResult List(int id)
         {
-            var categories = _categoryRepository.GetAll(x => x.IsActive).Select(x =>
-            new CategoryViewModel()
+            var indexViewModel = new IndexViewModel();
+
+            var categories = _categoryRepository.GetAll(x => x.IsActive).Select(x => new CategoryViewModel()
             {
-                Id = x.Id,
                 CategoryName = x.CategoryName,
                 CategoryDescription = x.CategoryDescription,
-                // TODO - PictureStr = Convert.ToBase64String(x.Picture)
+                Id = x.Id,
+                PictureStr = Convert.ToBase64String(x.Picture)
+
             }).ToList();
 
-            return View(categories);
+
+            var products = _productRepository.GetAll(include: x => x.Include(y => y.Category).Include(y => y.Supplier)).Select(x =>
+               new ProductViewModel()
+               {
+                   Id = x.Id,
+                   ProductName = x.ProductName,
+                   UnitPrice = x.UnitPrice,
+                   UnitsInStock = x.UnitsInStock,
+                   ReorderLevel = x.ReorderLevel,
+                   Discontinued = x.Discontinued,
+                   CategoryId = x.Category.Id,
+
+                   SupplierId = x.SupplierId,
+                   PictureStr = Convert.ToBase64String(x.Picture)
+               }).ToList();
+
+
+            indexViewModel.Categories = categories;
+            indexViewModel.Products = products;
+            return View(indexViewModel);
         }
 
         public IActionResult Detail(int id)
