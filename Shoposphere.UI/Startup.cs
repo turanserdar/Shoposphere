@@ -49,7 +49,13 @@ namespace Shoposphere.UI
                    option.ExpireTimeSpan = TimeSpan.FromHours(1);
                });
 
-
+            services.AddDistributedMemoryCache();
+            services.AddSession(option =>
+            {
+                //options.Cookie.IsEssential = true; ??
+                // options.Cookie.Name = ".DotNetCore.Session"; ??
+                option.IdleTimeout = TimeSpan.FromMinutes(60);
+            });
             services.AddControllersWithViews();
         }
 
@@ -64,10 +70,10 @@ namespace Shoposphere.UI
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-            app.UseStaticFiles();
-
+          
+            app.UseSession();
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -76,6 +82,7 @@ namespace Shoposphere.UI
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            app.UseStaticFiles();
         }
     }
 }

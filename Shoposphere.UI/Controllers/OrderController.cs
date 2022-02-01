@@ -8,175 +8,161 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace Shoposphere.UI.Controllers
 {
+
     public class OrderController : BaseController
     {
         private readonly IRepository<Order> _orderRepository;
-       
-        private readonly IRepository<Product> _productRepository;
-
-        public OrderController(IRepository<Order> orderRepository,  IRepository<Product> productRepository)
+        private readonly IRepository<Shipper> _shipperRepository;
+        public OrderController(IRepository<Order> orderRepository, IRepository<Shipper> shipperRepositor)
         {
             _orderRepository = orderRepository;
-            
-            _productRepository = productRepository;
+            _shipperRepository = shipperRepositor;
         }
 
+        //[Authorize(Roles = "1")]
         public IActionResult List()
         {
+            var orders = _orderRepository.GetAll(x => x.IsActive).Select(x =>
+           new OrderViewModel()
+           {
+               Id = x.Id,
+               CustomerName = x.User.FirstName,
+               CustomerSurname = x.User.LastName,
+               CustomerId = x.UserId,
+               ShipAddress = x.ShipAddress,
+               ShipperId = x.ShipperId,
+               ShipperName = x.Shipper.ShipperName,
+               RequiredDate = x.RequiredDate,
+               ShippedDate = x.ShippedDate,
+               Freight = x.Freight,
 
-         var orders= _orderRepository.GetAll().Select(x =>
-              new OrderViewModel()
-              {
-                  Id=x.Id,
-                  UserId=x.UserId,
-                  ShipperId=x.ShipperId,
-                  Comments=x.Comments,
-                  Freight=x.Freight,
-                  RequiredDate=x.RequiredDate,
-                  ShipAddress=x.ShipAddress,
-                  ShippedDate=x.ShippedDate,
-                  Shipper=x.Shipper,
-                  User=x.User,
-                  IsActive=x.IsActive
-                  
-                  
-              });
-
+           }).ToList();
 
             return View(orders);
         }
 
-        public IActionResult Detail(int id)
+        //public ActionResult Add()
+        //{
+        //    // sepetteki ürünleri order detail olarak düzenleyerek order nesnesine ekleyerek dbye kayıt edeceğiz.
+
+        //    var cartItemList = new List<CartItem>();
+
+        //    var sessionCart = HttpContext.Session.GetString("SessionShopCart");
+
+        //    if (sessionCart!= null)
+        //    {
+        //        cartItemList = JsonConvert.DeserializeObject<List<CartItem>>(HttpContext.Session.GetString("SessionShopCart"));
+        //    }
+
+        //    var orderDetails = new List<OrderDetail>();
+
+        //    orderDetails = cartItemList.Select(x => new OrderDetail()
+        //    {
+        //        ProductID = x.Product.Id,
+        //        Quantity = x.Quantity,
+        //        UnitPrice = x.Product.UnitPrice,
+        //         Discount = 0,
+        //         Product = x.Product,
+        //    }).ToList();
+
+        //    var currentUserId = GetCurrentUserId();
+        //    var order = new Order()
+        //    {
+        //        CreatedById = currentUserId,
+        //        CreatedDate = DateTime.Now, // (OrderDate)
+        //        IsActive = true, 
+        //        UserId = currentUserId,
+        //        OrderDetails = orderDetails,
+        //    };
+
+        //    var result = _orderRepository.Add(order);
+
+        //    if (result)
+        //    {
+        //        HttpContext.Session.SetString("SessionShopCart", "");
+        //        TempData["Message"] = "Payment successful";
+        //        return RedirectToAction("Index", "Home");
+        //    }
+
+        //    return RedirectToAction("List", "Cart");
+        //}
+
+      
+        public ActionResult Checkout()
         {
-            //var orderDetail = _orderRepository.Get(x => x.Id == id && x.IsActive,
-            //   x => x.Include(y => y.OrderDetails)
-            //   .ThenInclude(y => y.Product));
-
-            var orderDetail = _orderRepository.Get(x => x.Id == id /*&& x.IsActive*/, x => x.Include(y => y.User).Include(y => y.OrderDetails).ThenInclude(y => y.Product).ThenInclude(y=>y.Supplier));
-
-            var orderDetailVM = new OrderViewModel()
+            ViewBag.Shippers = _shipperRepository.GetAll(x => x.IsActive).Select(x => new SelectListItem()
             {
-                Id = orderDetail.Id,
-                Comments = orderDetail.Comments,
-                Freight = orderDetail.Freight,
-                IsActive = orderDetail.IsActive,
-                RequiredDate = orderDetail.RequiredDate,
-                ShipAddress = orderDetail.ShipAddress,
-                ShippedDate = orderDetail.ShippedDate,
-                Shipper = orderDetail.Shipper,
-                ShipperId = orderDetail.ShipperId,
-                User = orderDetail.User,
-                UserId = orderDetail.UserId,
+                Text = x.ShipperName,
+                Value = x.Id.ToString()
+            }).ToList();
 
+            ViewBag.Cart = JsonConvert.DeserializeObject<List<CartItemViewModel>>(HttpContext.Session.GetString("SessionShopCart"));
 
-
-            };
-
-            var vm = new OrderDetailViewModel()
+            if (ViewBag.Cart == null)
             {
-                OrderDetail = orderDetailVM,
-                Products = new ProductViewModel()
-            };
-
-            return View(vm);
-        }
-
-
-
-        public ActionResult Edit(int id)
-        {
-
-
-        
-
-            var orders = _orderRepository.Get(x => x.Id == id);
-            //ViewBag.orders = _orderRepository.GetAll(x => x.IsActive).Select(x => new SelectListItem()
-            //{
-            //    Text = x.IsActive.ToString(),
-            //    Value = x.Id.ToString(),
-            //}).ToList();
-
-
-            if (orders != null)
-            {
-                var vm = new OrderViewModel()
-                {
-                    Id=orders.Id,
-                    Freight=orders.Freight,
-                    IsActive=orders.IsActive ,
-                    RequiredDate=orders.RequiredDate,
-                    ShipAddress=orders.ShipAddress,
-                    Shipper=orders.Shipper,
-                    ShippedDate=orders.ShippedDate,
-                    ShipperId=orders.ShipperId,
-                    UserId=orders.UserId
-
-
-                };
-
-                return View(vm);
+                TempData["Message"] = "Your cart is empty";
+                return RedirectToAction("List", "Cart");
             }
 
-            TempData["Message"] = "Order cannot be found!";
-            return RedirectToAction("List");
+            return View();
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(OrderViewModel model)
+        public ActionResult Checkout(OrderViewModel model)
         {
-            if (!ModelState.IsValid)
+            var cartItemList = new List<CartItemViewModel>();
+
+            var sessionCart = HttpContext.Session.GetString("SessionShopCart");
+
+            if (sessionCart != null)
             {
-                //ViewBag.orders = _orderRepository.GetAll(x => x.IsActive).Select(x => new SelectListItem()
-                //{
-                //    Text = x.IsActive.ToString(),
-                //    Value = x.Id.ToString(),
-                //}).ToList();
-
-
-                return View("Edit", model);
+                cartItemList = JsonConvert.DeserializeObject<List<CartItemViewModel>>(HttpContext.Session.GetString("SessionShopCart"));
             }
-            
 
+            var orderDetails = new List<OrderDetail>();
+
+            orderDetails = cartItemList.Select(x => new OrderDetail()
+            {
+                ProductID = x.Product.Id,
+                Quantity = x.Quantity,
+                UnitPrice = x.Product.UnitPrice,
+                Discount = 0,
+                // product gönderemezsin
+            }).ToList();
 
             var currentUserId = GetCurrentUserId();
-
-            Order entity = new Order()
+            var order = new Order()
             {
-                Id = model.Id,
-
-                UserId = model.UserId,
-                ShipperId = model.ShipperId,
-                Comments = model.Comments,
-                Freight = model.Freight,
-                RequiredDate = model.RequiredDate,
+                CreatedById = currentUserId,
+                CreatedDate = DateTime.Now, // (OrderDate)
+                IsActive = true,
+                UserId = currentUserId,
+                OrderDetails = orderDetails,
                 ShipAddress = model.ShipAddress,
-                ShippedDate = model.ShippedDate,
-                Shipper = model.Shipper,
-                User = model.User,
-                IsActive=model.IsActive,
-                
-                
-
+                ShipperId = 3,
 
             };
 
-            bool result;
-
-            result = _orderRepository.Edit(entity);
+            var result = _orderRepository.Add(order);
 
             if (result)
             {
-                return RedirectToAction("List");
+                HttpContext.Session.Clear(); // DONT - HttpContext.Session.SetString("SessionShopCart", "");
+                TempData["Message"] = "Payment successful";
+                return RedirectToAction("Index", "Home");
             }
 
-            TempData["Message"] = "Uh oh! Something went wrong...";
-            return View("Edit", model);
+            return RedirectToAction("List", "Cart");
         }
-
-
     }
+
+
+
+
+
 }
