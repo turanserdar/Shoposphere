@@ -412,3 +412,100 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 </body>
 
 </html>
+
+
+
+<div class="container">
+    <div class="container-fluid">
+        <div class="cart-table-area section-padding-100">
+            <div class="row">
+                <div class="col-12 col-lg-8">
+                    <div class="cart-title mt-50">
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <h3>Shopping Cart</h3>
+                        <br />
+                        <br />
+                        <br />
+
+
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/Home/index">Home</a></li>
+                                <li class="breadcrumb-item" aria-current="page"><a href="">Cart</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">List</li>
+                            </ol>
+                        </nav>
+                    </div>
+
+
+                    <table class="table table-responsive">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+
+                            <tr>
+                                <td class="cart_product_img d-flex align-items-center">
+                                    <a href="#"><img @*style="width:50%" *@ src="data:image;base64, @item.PictureStr" alt="@item.Product.ProductName"></a>
+                                    <h6>@item.Product.ProductName</h6>
+                                </td>
+                                <td class="price"><span>@item.Product.UnitPrice</span></td>
+                                <td class="qty">
+                                    <div class="quantity">
+                                        <span class="qty-minus" onclick="location.href='/cart/delete/@item.Product.Id';"><i class="fa fa-minus" aria-hidden="true"></i></span>
+                                        <input type="number" class="qty-text" id="qty" step="1" min="1" max="300" name="quantity" value="@item.Quantity">
+                                        <span class="qty-plus" onclick="location.href='/cart/add/@item.Product.Id';"><i class="fa fa-plus" aria-hidden="true"></i></span>
+                                    </div>
+                                </td>
+
+                            </tr>}
+                        </tbody>
+                    </table>
+                </div>
+
+
+
+
+                <div class="cart_area section_padding_100 clearfix">
+                    <div class="container">
+
+
+                        <div class="row">
+
+                            <div class="col-12 ">
+                                <div class="cart-total-area mt-70">
+                                    <div class="cart-page-heading">
+                                        <h5>Cart total</h5>
+                                        <p>Final info</p>
+                                    </div>
+
+                                    <ul class="cart-total-chart">
+                                        @foreach (var item in Model)
+                                        {
+
+                                        <li><span>Subtotal</span> <span>@item.SubTotalPrice</span></li>}
+                                        <li><span>Shipping</span> <span>Free</span></li>
+                                        <li><span><strong>Total</strong></span> <span><strong>@Model.Sum(x => x.SubTotalPrice)</strong></span></li>
+                                    </ul>
+                                    <a href="/order/checkout" class="btn karl-checkout-btn">Checkout</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>

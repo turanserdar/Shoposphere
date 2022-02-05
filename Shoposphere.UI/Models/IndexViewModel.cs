@@ -11,6 +11,8 @@ namespace Shoposphere.UI.Models
 
         public List<CategoryViewModel> Categories { get; set; }
         public List<ProductViewModel> Products { get; set; }
+        
+      
 
 
     }

@@ -95,10 +95,6 @@ namespace Shoposphere.UI.Controllers
             indexViewModel.Products = products;
             return View(indexViewModel);
 
-
-
-
-
         }
     }
 }

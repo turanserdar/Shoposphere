@@ -24,6 +24,6 @@ namespace Shoposphere.UI.Models
 
         public bool IsActive { get; set; }
 
-        //public List<Product> Products { get; set; }
+        public List<Product> Products { get; set; }
     }
 }
